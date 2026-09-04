@@ -1,0 +1,234 @@
+// Propster persistence layer.
+//
+// SQLite for the MVP. Swap `provider` to "postgresql" and point DATABASE_URL
+// at a Postgres instance to deploy; no model changes are required.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Pooled (pgBouncer) endpoint for the application's own queries.
+  url      = env("DATABASE_URL")
+  // Direct endpoint for schema changes. pgBouncer runs in transaction mode and
+  // cannot execute the session-level DDL that `prisma db push` issues, so
+  // migrations must bypass the pooler.
+  directUrl = env("DIRECT_DB_URL")
+}
+
+/// One user search. Holds the extracted, validated requirement so the
+/// dashboard and every later verification score against the same criteria.
+model Search {
+  id                     String   @id @default(cuid())
+  rawQuery               String?
+  extractionSource       String   @default("rules") // "claude" | "rules"
+  location               String
+  propertyType           String?
+  bedrooms               Int?
+  bathrooms              Int?
+  minRent                Float?
+  maxRent                Float?
+  currency               String   @default("USD")
+  rentPeriod             String   @default("yearly")
+  moveInDate             String?
+  amenities              String   @default("[]") // JSON string array
+  additionalRequirements String   @default("[]") // JSON string array
+  createdAt              DateTime @default(now())
+
+  candidates SearchCandidate[]
+
+  @@index([createdAt])
+}
+
+/// A listing. Seeded for the MVP; a real PropertySearchProvider writes the
+/// same rows.
+model Property {
+  id           String  @id @default(cuid())
+  title        String
+  description  String
+  location     String
+  area         String
+  country      String?
+  propertyType String
+  bedrooms     Int
+  bathrooms    Int?
+  rent         Float
+  /// ISO 4217. Rent is never converted between currencies anywhere in the
+  /// product: a listing, its verification and the budget it is judged against
+  /// all share one currency.
+  currency     String  @default("USD")
+  rentPeriod   String  @default("yearly")
+  amenities    String  @default("[]") // JSON string array
+  imageUrl     String?
+  sourceUrl    String?
+  agentName    String?
+  agentPhone   String?
+  listedAt     String?
+
+  /// Drives the deterministic demo provider. Ignored entirely when a real
+  /// CALL-E call is placed: the live conversation is the only source of truth.
+  demoScenario String @default("clean")
+
+  /// "seed" for the demo corpus, "user" for a listing someone submitted through
+  /// /try. Reseeding only ever deletes "seed" rows, so a visitor's test
+  /// property survives `npm run db:seed`.
+  source String @default("seed")
+
+  /// Set when the submitter declared the contact number is their own and
+  /// consented to an automated call. Only a property carrying consent may
+  /// bypass the outbound allowlist.
+  consentedAt DateTime?
+  /// Free-text name the submitter gave, for display only.
+  submittedBy String?
+
+  verificationStatus String  @default("unverified")
+  verificationScore  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  verifications PropertyVerification[]
+  candidates    SearchCandidate[]
+
+  @@index([area])
+  @@index([bedrooms])
+  @@index([source])
+}
+
+/// Join row: this property was returned for this search, with the match score
+/// computed at search time.
+model SearchCandidate {
+  id         String  @id @default(cuid())
+  searchId   String
+  propertyId String
+  matchScore Float
+  matchNotes String  @default("{}") // JSON { reasons: [], misses: [] }
+  isCandidate Boolean @default(false)
+
+  search   Search   @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([searchId, propertyId])
+  @@index([searchId])
+}
+
+/// One verification attempt against one property, for one search.
+model PropertyVerification {
+  id         String @id @default(cuid())
+  propertyId String
+  searchId   String
+
+  status String @default("pending") // mirrors VerificationStatus
+
+  available       Boolean?
+  currentRent     Float?
+  currency        String?
+  rentPeriod      String?
+  bedrooms        Int?
+  bathrooms       Int?
+  serviceCharge   Float?
+  cautionFee      Float?
+  agencyFee       Float?
+  legalFee        Float?
+  electricityType String?
+  waterSupply     String?
+  parkingAvailable   Boolean?
+  securityAvailable  Boolean?
+  generatorAvailable Boolean?
+  internetAvailable  Boolean?
+  airConditioning    Boolean?
+  furnished       Boolean?
+  petsAllowed     Boolean?
+  viewingAvailable Boolean?
+  viewingFee      Float?
+  earliestMoveIn  String?
+  agentNotes      String?
+
+  contactConfidence Float?
+
+  /// Explainable score breakdown, JSON-encoded VerificationScore.
+  scoreBreakdown String?
+  score          Float?
+
+  failureCode    String?
+  failureMessage String?
+
+  startedAt  DateTime  @default(now())
+  verifiedAt DateTime?
+
+  property      Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  discrepancies Discrepancy[]
+  callSession   CallSession?
+  events        VerificationEvent[]
+
+  @@index([propertyId])
+  @@index([searchId])
+}
+
+model Discrepancy {
+  id             String @id @default(cuid())
+  verificationId String
+  field          String
+  listedValue    String?
+  verifiedValue  String?
+  severity       String
+  explanation    String
+
+  verification PropertyVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@index([verificationId])
+}
+
+/// The CALL-E call behind a verification. `provider` records which
+/// PhoneVerificationProvider placed it, so a simulated call can never be
+/// mistaken for a real one after the fact.
+model CallSession {
+  id             String @id @default(cuid())
+  verificationId String @unique
+
+  provider       String // "call-e" | "mock"
+  providerCallId String?
+  status         String  @default("queued")
+  phone          String
+  task           String
+
+  /// JSON CallTranscriptTurn[] recovered from the provider.
+  transcript String?
+  summary    String?
+  /// JSON: raw structured result returned by the provider, before validation.
+  rawResult  String?
+
+  taskCompleted        Boolean?
+  completionConfidence Float?
+  evidence             String? // JSON string array
+
+  failureCode    String?
+  failureMessage String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  durationSeconds Int?
+
+  verification PropertyVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@index([providerCallId])
+}
+
+/// Append-only activity log powering the live verification panel.
+model VerificationEvent {
+  id             String   @id @default(cuid())
+  verificationId String
+  level          String   @default("info") // info | success | warning | error
+  message        String
+  detail         String?
+  /// Provider-side event id. Unique per verification so that concurrent
+  /// status polls cannot insert the same provider event twice.
+  sourceId       String?
+  createdAt      DateTime @default(now())
+
+  verification PropertyVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@unique([verificationId, sourceId])
+  @@index([verificationId, createdAt])
+}

@@ -1,0 +1,202 @@
+[
+  {
+    "offsetSeconds": 0,
+    "speaker": "agent",
+    "text": "Hello,"
+  },
+  {
+    "offsetSeconds": 1,
+    "speaker": "agent",
+    "text": "I'm an AI assistant calling on behalf of a prospective tenant to verify the details of a specific rental listing."
+  },
+  {
+    "offsetSeconds": 15,
+    "speaker": "contact",
+    "text": "four season house line i was gonna do i don't look at infuse 2 outfits so we need to be able to map out who needs my dentist OK who is microsoft 9 right i deposit"
+  },
+  {
+    "offsetSeconds": 16,
+    "speaker": "agent",
+    "text": "Is the property still available to rent?"
+  },
+  {
+    "offsetSeconds": 34,
+    "speaker": "contact",
+    "text": "my issue. Hello. Actually cover. So I would like to. I also want us to yes, it is."
+  },
+  {
+    "offsetSeconds": 36,
+    "speaker": "agent",
+    "text": "Thanks."
+  },
+  {
+    "offsetSeconds": 37,
+    "speaker": "agent",
+    "text": "What’s the current asking rent, and is that yearly or monthly?"
+  },
+  {
+    "offsetSeconds": 50,
+    "speaker": "contact",
+    "text": "Friendship with a lot of you guys. Monthly. about 10 million naira"
+  },
+  {
+    "offsetSeconds": 51,
+    "speaker": "agent",
+    "text": "Got it."
+  },
+  {
+    "offsetSeconds": 52,
+    "speaker": "agent",
+    "text": "How many bedrooms and bathrooms does it have?"
+  },
+  {
+    "offsetSeconds": 61,
+    "speaker": "contact",
+    "text": "58."
+  },
+  {
+    "offsetSeconds": 62,
+    "speaker": "agent",
+    "text": "Okay—just to confirm,"
+  },
+  {
+    "offsetSeconds": 64,
+    "speaker": "agent",
+    "text": "is that 5 bedrooms and 8 bathrooms?"
+  },
+  {
+    "offsetSeconds": 72,
+    "speaker": "agent",
+    "text": "Can you hear me?"
+  },
+  {
+    "offsetSeconds": 73,
+    "speaker": "contact",
+    "text": "5 bedrooms and five bathrooms."
+  },
+  {
+    "offsetSeconds": 76,
+    "speaker": "agent",
+    "text": "Thanks."
+  },
+  {
+    "offsetSeconds": 77,
+    "speaker": "agent",
+    "text": "Does it have dedicated parking, and if so, how many cars?"
+  },
+  {
+    "offsetSeconds": 90,
+    "speaker": "contact",
+    "text": "Yes, 5 bedrooms and five bathrooms. Hello. Set 5 bedrooms and five bathrooms."
+  },
+  {
+    "offsetSeconds": 93,
+    "speaker": "agent",
+    "text": "Great."
+  },
+  {
+    "offsetSeconds": 94,
+    "speaker": "agent",
+    "text": "How many cars can park there, and is there a prepaid meter or estate/postpaid billing?"
+  },
+  {
+    "offsetSeconds": 103,
+    "speaker": "contact",
+    "text": "We need to fix it and the way I look at things was women. there is preparing me sir"
+  },
+  {
+    "offsetSeconds": 104,
+    "speaker": "agent",
+    "text": "Okay,"
+  },
+  {
+    "offsetSeconds": 105,
+    "speaker": "agent",
+    "text": "and does it have a prepaid meter or estate/postpaid billing?"
+  },
+  {
+    "offsetSeconds": 112,
+    "speaker": "contact",
+    "text": "so cars can be packed. Repeat."
+  },
+  {
+    "offsetSeconds": 113,
+    "speaker": "agent",
+    "text": "How many cars can be parked there?"
+  },
+  {
+    "offsetSeconds": 120,
+    "speaker": "agent",
+    "text": "Can you hear me?"
+  },
+  {
+    "offsetSeconds": 128,
+    "speaker": "contact",
+    "text": "Yes, two cars. 2 cars."
+  },
+  {
+    "offsetSeconds": 129,
+    "speaker": "agent",
+    "text": "Thanks."
+  },
+  {
+    "offsetSeconds": 130,
+    "speaker": "agent",
+    "text": "What are the upfront costs — service charge, agency fee,"
+  },
+  {
+    "offsetSeconds": 133,
+    "speaker": "agent",
+    "text": "legal fee, and caution deposit?"
+  },
+  {
+    "offsetSeconds": 145,
+    "speaker": "contact",
+    "text": "Well plan to send for caution and to send for legal fees."
+  },
+  {
+    "offsetSeconds": 148,
+    "speaker": "agent",
+    "text": "Okay."
+  },
+  {
+    "offsetSeconds": 148,
+    "speaker": "agent",
+    "text": "And when can someone move in — is this month possible?"
+  },
+  {
+    "offsetSeconds": 156,
+    "speaker": "agent",
+    "text": "Are you still with me?"
+  },
+  {
+    "offsetSeconds": 161,
+    "speaker": "contact",
+    "text": "Yes. yes it is"
+  },
+  {
+    "offsetSeconds": 162,
+    "speaker": "agent",
+    "text": "Thanks."
+  },
+  {
+    "offsetSeconds": 163,
+    "speaker": "agent",
+    "text": "Is inspection available, and is there an inspection fee?"
+  },
+  {
+    "offsetSeconds": 172,
+    "speaker": "contact",
+    "text": "No inspection fee and yes, inspection is available."
+  },
+  {
+    "offsetSeconds": 174,
+    "speaker": "agent",
+    "text": "Great,"
+  },
+  {
+    "offsetSeconds": 175,
+    "speaker": "agent",
+    "text": "thank you for the details."
+  }
+]

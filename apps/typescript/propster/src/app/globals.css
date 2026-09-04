@@ -1,0 +1,408 @@
+@import "tailwindcss";
+
+/*
+ * Propster design tokens.
+ *
+ * The product's visual language is built on one contrast: the emotional
+ * appeal of a property against the evidence that verifies it. That contrast
+ * runs through three "worlds" the landing page moves between —
+ *
+ *   PROPERTY     warm whites, natural neutrals, photography
+ *   INVESTIGATION near-black, cool neutrals, electric blue
+ *   EVIDENCE     light neutral ground, dark type, restrained accents
+ *
+ * Colour is never decorative. It always says which world you are in, or how
+ * trustworthy a listing is.
+ */
+@theme {
+  /* --- Ink: the application's cool neutral ramp -------------------------- */
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #ecedf1;
+  --color-ink-200: #d8dbe3;
+  --color-ink-300: #b4b9c7;
+  --color-ink-400: #8b92a6;
+  --color-ink-500: #6b7285;
+  --color-ink-600: #545a6b;
+  --color-ink-700: #414653;
+  --color-ink-800: #2b2f39;
+  --color-ink-900: #14171d;
+  --color-ink-950: #0a0c10;
+
+  /* --- Sand: the property world. Warm, architectural, natural ----------- */
+  --color-sand-50: #faf8f5;
+  --color-sand-100: #f3efe9;
+  --color-sand-200: #e7e0d5;
+  --color-sand-300: #d5cabb;
+  --color-sand-400: #b3a693;
+  --color-sand-500: #8c8071;
+  --color-sand-600: #6b6156;
+
+  /* --- Void: the investigation world. Near-black, never pure black ------ */
+  --color-void-900: #0c0e12;
+  --color-void-850: #12151b;
+  --color-void-800: #171b23;
+  --color-void-700: #212734;
+  --color-void-600: #2f3747;
+
+  /* --- Signal: electric blue. The intelligence layer -------------------- */
+  --color-signal-50: #eef4ff;
+  --color-signal-100: #dae6ff;
+  --color-signal-200: #bcd2ff;
+  --color-signal-300: #8eb4ff;
+  --color-signal-400: #598aff;
+  --color-signal-500: #3462f6;
+  --color-signal-600: #2049e3;
+  --color-signal-700: #1b3bb8;
+  --color-signal-800: #1c3492;
+  --color-signal-900: #1c3073;
+
+  /* --- Semantic verification states -------------------------------------- */
+  --color-verified-400: #34c79b;
+  --color-verified-500: #10916b;
+  --color-verified-600: #0d7757;
+  --color-verified-50: #e7f7f1;
+
+  --color-caution-400: #e0a92e;
+  --color-caution-500: #c2810b;
+  --color-caution-600: #a06a06;
+  --color-caution-50: #fdf5e4;
+
+  --color-alert-400: #e8686f;
+  --color-alert-500: #d1444b;
+  --color-alert-600: #b0343b;
+  --color-alert-50: #fdeced;
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-sans: var(--font-display), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-accent: var(--font-accent), ui-serif, Georgia, serif;
+  --font-mono: var(--font-information), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+:root {
+  --surface: #fbfbfc;
+  --surface-raised: #ffffff;
+  --border-subtle: rgb(0 0 0 / 0.07);
+  --border-strong: rgb(0 0 0 / 0.12);
+  color-scheme: light;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--surface);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum";
+}
+
+/* Numbers in scores, rents and fee tables must align in columns. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   LANDING TYPOGRAPHY
+   The display face is set enormous and tight; the information face is set
+   small, uppercase and wide. The gap between them is the point.
+   ========================================================================== */
+
+.type-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  text-wrap: balance;
+}
+
+.type-accent {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Metadata, labels, and anything the product asserts as fact. */
+.type-info {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.type-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Fluid display sizes. Clamped so 1024 and mobile stay composed.
+   The hero is bounded by viewport HEIGHT as well as width: a four-line
+   headline on a 900px-tall laptop must still leave room for the copy and the
+   actions beneath it, which a width-only clamp cannot guarantee. */
+.size-hero {
+  font-size: clamp(2.5rem, min(7.6vw, 12.4svh), 7.5rem);
+}
+.size-statement {
+  font-size: clamp(2.25rem, 6.2vw, 6rem);
+}
+.size-section {
+  font-size: clamp(1.875rem, 4.4vw, 4rem);
+}
+
+/* ==========================================================================
+   MOTION
+   Only transform, opacity and clip-path. Everything is opt-in via a class the
+   IntersectionObserver adds, so nothing animates off-screen.
+   ========================================================================== */
+
+/* --- Reveal: the base entrance --------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- Reveal a line of display type from behind a mask ----------------- */
+.reveal-line {
+  display: block;
+  overflow: hidden;
+  /* Display type is set at line-height 0.92, so the mask box is shorter than
+     the glyphs and would clip ascenders and descenders. Pad the box out and
+     pull the same amount back off the layout. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.reveal-line > span {
+  display: block;
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1.05s cubic-bezier(0.19, 1, 0.22, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform;
+}
+.reveal-line.is-visible > span {
+  transform: none;
+}
+
+/* --- Reveal an image from behind a wipe ------------------------------- */
+.reveal-image {
+  clip-path: inset(0 0 100% 0);
+  transform: scale(1.08);
+  transition:
+    clip-path 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: clip-path, transform;
+}
+.reveal-image.is-visible {
+  clip-path: inset(0 0 0 0);
+  transform: none;
+}
+
+/* --- A rule that draws itself ----------------------------------------- */
+.reveal-rule {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-rule.is-visible {
+  transform: scaleX(1);
+}
+
+/* --- Application entrance ---------------------------------------------
+   Used by the search, dashboard and property pages, which animate on mount
+   rather than on scroll. Kept here so the landing page and the application
+   share one stylesheet and one motion vocabulary. */
+@keyframes propster-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: propster-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Ambient motion ---------------------------------------------------- */
+@keyframes propster-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(52 98 246 / 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgb(52 98 246 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(52 98 246 / 0);
+  }
+}
+
+@keyframes propster-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes propster-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes propster-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+/* The call waveform. Each bar is delayed by an inline custom property. */
+@keyframes propster-wave {
+  0%,
+  100% {
+    transform: scaleY(0.22);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes propster-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-ring {
+  animation: propster-pulse-ring 1.8s ease-out infinite;
+}
+.animate-blink {
+  animation: propster-blink 1.6s ease-in-out infinite;
+}
+.animate-drift {
+  animation: propster-drift 7s ease-in-out infinite;
+}
+.animate-wave {
+  animation: propster-wave 1.1s ease-in-out infinite;
+  animation-delay: var(--wave-delay, 0ms);
+  transform-origin: center;
+}
+.animate-scan {
+  animation: propster-scan 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.animate-sweep {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-ink-100) 0%,
+    var(--color-ink-200) 40%,
+    var(--color-ink-100) 80%
+  );
+  background-size: 200% 100%;
+  animation: propster-sweep 1.6s linear infinite;
+}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-300) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-ink-200);
+  border-radius: 999px;
+}
+
+/* Hides the horizontal scrollbar on the workflow rail without hiding
+   the ability to scroll it. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Photography is graded consistently across the page so images from
+   different sources read as one campaign. */
+.grade-property {
+  filter: saturate(0.92) contrast(1.04);
+}
+.grade-investigation {
+  filter: saturate(0.34) contrast(1.12) brightness(0.72);
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Everything still arrives, it simply arrives immediately.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal,
+  .reveal-line > span,
+  .reveal-image,
+  .reveal-rule {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    transition: none;
+  }
+
+  .animate-rise,
+  .animate-ring,
+  .animate-blink,
+  .animate-drift,
+  .animate-wave,
+  .animate-scan,
+  .animate-sweep {
+    animation: none;
+  }
+}
