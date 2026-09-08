@@ -304,6 +304,20 @@ function annual(context: DemoContext): number {
   return context.rentPeriod === "monthly" ? context.rent * 12 : context.rent;
 }
 
+/**
+ * Round a derived figure to a step that suits its magnitude.
+ *
+ * An earlier version rounded every amount to the nearest 100,000, which reads
+ * naturally for a rent quoted in millions and collapses a four-figure European
+ * rent to zero. The step is taken from the number itself instead, keeping about
+ * two significant figures: 26,136 becomes 26,000 and 9,900,000 stays put.
+ */
+function roundSpeakable(amount: number): number {
+  if (amount <= 0) return 0;
+  const step = 10 ** Math.max(0, Math.floor(Math.log10(amount)) - 1);
+  return Math.round(amount / step) * step;
+}
+
 /** Render an amount the way someone says it out loud. */
 function spoken(amount: number): string {
   if (amount >= 1_000_000) {
@@ -343,8 +357,11 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
   // and legal are each ten percent of the annual rent.
   const agency = Math.round(listed * 0.1);
   const legal = Math.round(listed * 0.1);
-  const serviceCharge = Math.round((listed * 0.067) / 10_000) * 10_000;
-  const caution = Math.round((listed * 0.027) / 10_000) * 10_000;
+  const serviceCharge = roundSpeakable(listed * 0.067);
+  const caution = roundSpeakable(listed * 0.027);
+  // A viewing fee is uncommon in most markets, so the scenarios that charge one
+  // keep it small relative to the rent rather than naming a fixed sum.
+  const viewing = roundSpeakable(listed * 0.004);
 
   switch (scenario) {
     // -- Everything checks out ---------------------------------------------
@@ -362,10 +379,10 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           legal_fee: legal,
           caution_fee: caution,
           electricity_type: "prepaid meter",
-          water_supply: "borehole",
+          water_supply: "mains",
           parking_available: true,
           security_available: true,
-          generator_available: true,
+          generator_available: null,
           air_conditioning: true,
           furnished: false,
           viewing_available: true,
@@ -383,7 +400,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           turn(33, "agent", "Understood. How many bedrooms and bathrooms?"),
           turn(37, "contact", beds + " bedrooms, all en suite, so " + baths + " bathrooms plus a guest toilet."),
           turn(45, "agent", "Is there dedicated parking?"),
-          turn(48, "contact", "Yes, one dedicated bay per flat, and there is visitor parking in the compound."),
+          turn(48, "contact", "Yes, one dedicated bay per flat, and there is visitor parking at the front."),
           turn(56, "agent", "How is electricity billed, is there a prepaid meter?"),
           turn(60, "contact", "Prepaid meter, yes. Each flat has its own."),
           turn(66, "agent", "And what other upfront costs should the tenant expect?"),
@@ -391,7 +408,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
             71,
             "contact",
             "Service charge is " + spoken(serviceCharge) + " a year. Agency is " + spoken(agency) +
-              ", legal is the same, and caution deposit is " + spoken(caution) + ", refundable.",
+              ", legal is the same, and the deposit is " + spoken(caution) + ", refundable.",
           ),
           turn(88, "agent", "Thank you. How soon could someone move in?"),
           turn(92, "contact", "Immediately. The flat is empty and cleaned."),
@@ -424,7 +441,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
 
     // -- The rent went up after the listing was posted ----------------------
     case "price_mismatch": {
-      const actual = Math.round((listed * 1.32) / 100_000) * 100_000;
+      const actual = roundSpeakable(listed * 1.32);
       const upAgency = Math.round(actual * 0.1);
       return {
         result: {
@@ -434,17 +451,17 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           rent_period: "yearly",
           bedrooms: beds,
           bathrooms: baths,
-          service_charge: Math.round((actual * 0.067) / 10_000) * 10_000,
+          service_charge: roundSpeakable(actual * 0.067),
           agency_fee: upAgency,
           legal_fee: upAgency,
-          caution_fee: Math.round((actual * 0.033) / 10_000) * 10_000,
+          caution_fee: roundSpeakable(actual * 0.033),
           electricity_type: "prepaid meter",
-          water_supply: "borehole",
+          water_supply: "mains",
           parking_available: true,
           security_available: true,
-          generator_available: true,
+          generator_available: null,
           viewing_available: true,
-          viewing_fee: 10_000,
+          viewing_fee: viewing,
           earliest_move_in: "immediately",
           agent_notes:
             "The landlord increased the rent after the listing was posted. The portal has not been updated.",
@@ -468,7 +485,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           turn(
             64,
             "contact",
-            "Service charge and caution are as before, agency and legal are ten percent each of the new rent. Inspection is ten thousand.",
+            "Service charge and deposit are as before, agency and legal are ten percent each of the new rent. The viewing fee is " + spoken(viewing) + ".",
           ),
           turn(80, "agent", "Thank you very much for your time. The tenant will follow up. Good day."),
         ],
@@ -507,15 +524,15 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           legal_fee: legal,
           caution_fee: null,
           electricity_type: "prepaid meter",
-          water_supply: "borehole",
+          water_supply: "mains",
           parking_available: false,
           security_available: true,
-          generator_available: true,
+          generator_available: null,
           viewing_available: true,
           viewing_fee: 0,
           earliest_move_in: "two weeks",
           agent_notes:
-            "Street parking only. The developer removed the dedicated bays when the compound was extended.",
+            "Street parking only. The developer removed the dedicated bays when the building was extended.",
         },
         transcript: [
           ...INTRO,
@@ -527,7 +544,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           turn(
             39,
             "contact",
-            "Hmm, not really dedicated. They extended the compound so the bays are gone. You would park on the street outside.",
+            "Hmm, not really dedicated. They extended the building so the bays are gone. You would park on the street outside.",
           ),
           turn(51, "agent", "So there is no dedicated parking included with the unit. Is that right?"),
           turn(57, "contact", "That is correct, street parking only."),
@@ -538,16 +555,16 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
             73,
             "contact",
             "Service charge is " + spoken(serviceCharge) +
-              ", agency and legal are ten percent each. I would have to check on the caution deposit.",
+              ", agency and legal are ten percent each. I would have to check on the deposit.",
           ),
           turn(86, "agent", "Understood. Thank you for your time, the tenant will be in touch."),
         ],
         summary:
-          "Property is available at the listed rent, but the advertised private parking does not exist. Street parking only. Caution deposit not confirmed.",
+          "Property is available at the listed rent, but the advertised private parking does not exist. Street parking only. Deposit not confirmed.",
         evidence: [
           "Contact confirmed availability and the listed rent",
           "Contact said the dedicated parking bays were removed",
-          "Caution deposit could not be confirmed on the call",
+          "The deposit could not be confirmed on the call",
         ],
         confidence: 0.85,
         durationSeconds: 91,
@@ -626,12 +643,12 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           legal_fee: null,
           caution_fee: null,
           electricity_type: "prepaid meter",
-          water_supply: "borehole",
+          water_supply: "mains",
           parking_available: true,
           security_available: true,
           generator_available: null,
           viewing_available: true,
-          viewing_fee: 5_000,
+          viewing_fee: viewing,
           earliest_move_in: "end of the month",
           agent_notes:
             "The contact is the caretaker, not the letting agent. He asked us to call the agent for the fee breakdown.",
@@ -643,7 +660,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
           turn(22, "agent", "What is the current rent per year?"),
           turn(26, "contact", spoken(listed) + "."),
           turn(31, "agent", "Is there parking, and is the meter prepaid?"),
-          turn(36, "contact", "Yes to both. Parking in the compound, prepaid meter in each flat."),
+          turn(36, "contact", "Yes to both. Parking on site, and a prepaid meter in each flat."),
           turn(44, "agent", "What is the service charge and the legal fee?"),
           turn(
             49,

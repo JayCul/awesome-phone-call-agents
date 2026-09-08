@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapCallStatus } from "@/server/verification/calleProvider";
+import { mapCallStatus, userMessageForApiCode } from "@/server/verification/calleProvider";
 import { verificationStatusForCall } from "@/domain/stateMachine";
 import type { Call } from "@call-e/calle";
 
@@ -129,5 +129,46 @@ describe("declined calls", () => {
     expect(verificationStatusForCall("no_answer")).toBe("failed");
     expect(verificationStatusForCall("canceled")).toBe("failed");
     expect(verificationStatusForCall("failed")).toBe("failed");
+  });
+});
+
+/**
+ * CALL-E refuses destinations it has no coverage for, and it does so with a
+ * generic `provider_unavailable` code and the real reason in the prose:
+ *
+ *   "This call is to a Nigeria number and would use English, but Nigeria/
+ *    English is not currently supported for calling."
+ *
+ * Reported by code alone this surfaces as "temporarily unavailable", which
+ * invites a retry that cannot ever succeed. This was diagnosed from a real
+ * rejection after three live calls failed for what looked like three unrelated
+ * reasons.
+ */
+describe("an unsupported destination country", () => {
+  const rejection =
+    "Call task creation was rejected: This call is to a Nigeria number and would use " +
+    "English, but Nigeria/English is not currently supported for calling. If you want to " +
+    "continue, please provide a recipient phone number in a supported region/language " +
+    "combination.";
+
+  // CALL-E sent this as `call_not_ready`; the route layer relabels it
+  // `provider_unavailable`. Neither code names the real problem, so both must
+  // be read through the prose.
+  it("tells the visitor the country is unsupported, not that the service is down", () => {
+    const message = userMessageForApiCode("call_not_ready", rejection);
+
+    expect(message).toMatch(/does not support calling/i);
+    expect(message).not.toMatch(/temporarily unavailable/i);
+  });
+
+  it("says plainly that nobody was called", () => {
+    const message = userMessageForApiCode("provider_unavailable", rejection);
+    expect(userMessageForApiCode("call_not_ready", rejection)).toBe(message);
+    expect(message).toMatch(/nobody was contacted/i);
+  });
+
+  it("still reports a genuine outage as an outage", () => {
+    const message = userMessageForApiCode("provider_unavailable", "Upstream gateway timed out");
+    expect(message).toMatch(/temporarily unavailable/i);
   });
 });

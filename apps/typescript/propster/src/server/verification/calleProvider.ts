@@ -61,7 +61,15 @@ export class CallEPhoneVerificationProvider implements PhoneVerificationProvider
       const call = await this.client.calls.create(
         {
           task: input.task,
-          recipients: [{ phones: [input.phone], region: "NG", locale: "en-NG" }],
+          // No region or locale hint is sent.
+          //
+          // Both are optional, and CALL-E derives the country and language from
+          // the E.164 number itself — a call created with both null still came
+          // back routed as US/English. Propster used to hard-code `region: "NG",
+          // locale: "en-NG"`, left over from when it was a Lagos-only tool; that
+          // asserted one market on every listing and could only ever conflict
+          // with what the number actually is.
+          recipients: [{ phones: [input.phone] }],
           // No result schema is sent.
           //
           // The SDK's types expose both `resultSchema` and
@@ -322,7 +330,7 @@ function translateError(error: unknown): PhoneProviderError {
   }
   if (error instanceof CalleAPIError) {
     const code = typeof error.code === "string" ? error.code : "api_error";
-    return new PhoneProviderError(error.message, code, userMessageForApiCode(code));
+    return new PhoneProviderError(error.message, code, userMessageForApiCode(code, error.message));
   }
 
   return new PhoneProviderError(
@@ -332,7 +340,30 @@ function translateError(error: unknown): PhoneProviderError {
   );
 }
 
-function userMessageForApiCode(code: string): string {
+/**
+ * Turn a rejection from CALL-E into something the visitor can act on.
+ *
+ * The code alone is not enough. CALL-E rejects an unsupported destination with
+ * `provider_unavailable` and puts the actual reason in the prose — "Nigeria/
+ * English is not currently supported for calling". Reported by code alone that
+ * reads as "temporarily unavailable", which invites a retry that can never
+ * succeed and sends the reader off checking their API key. So the prose is
+ * consulted first, the same way the SIP status is read ahead of it elsewhere.
+ */
+export function userMessageForApiCode(code: string, providerMessage?: string): string {
+  const prose = (providerMessage ?? "").toLowerCase();
+
+  if (
+    prose.includes("not currently supported for calling") ||
+    prose.includes("supported region") ||
+    prose.includes("region/language")
+  ) {
+    return (
+      "The call service does not support calling this number's country, so no call was placed " +
+      "and nobody was contacted. Use a contact number in a region CALL-E supports."
+    );
+  }
+
   switch (code) {
     case "insufficient_balance":
       return "The call account has no remaining balance, so this property could not be verified.";

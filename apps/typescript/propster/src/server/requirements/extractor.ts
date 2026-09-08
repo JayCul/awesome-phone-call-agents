@@ -1,6 +1,6 @@
 import "server-only";
 
-import { usingClaude } from "../env";
+import { llmConfigured } from "../env";
 import { activeProvider, completeJson, parseJsonObject } from "../llm";
 import { logger } from "../logger";
 import {
@@ -126,7 +126,7 @@ async function extractWithModel(text: string): Promise<ParsedRequirement | null>
  * practice means the text contained no recognisable location.
  */
 export async function extractRequirement(text: string): Promise<ExtractionOutcome | null> {
-  if (usingClaude()) {
+  if (llmConfigured()) {
     try {
       const requirement = await extractWithModel(text);
       if (requirement) return { requirement, source: "model" };

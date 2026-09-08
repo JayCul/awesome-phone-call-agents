@@ -171,7 +171,7 @@ async function grade(provider: "groq" | "anthropic", model: string): Promise<Gra
       total: 0,
       failures: [],
       // 429 and friends say nothing about the model's ability.
-      transportError: /(429|5\d\d|rate.?limit|timeout|ECONN)/i.test(message),
+      transportError: /\b(429|5\d\d|rate.?limit|timeout|ECONN)/i.test(message),
     };
   }
   const ms = Date.now() - started;

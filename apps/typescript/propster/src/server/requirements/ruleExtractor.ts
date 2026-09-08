@@ -90,20 +90,20 @@ const AMENITY_PATTERNS: Array<[RegExp, string]> = [
  * the named market usually quotes.
  */
 const CURRENCY_HINTS: Array<[RegExp, Currency]> = [
-  [/(eur|€|euros?)/i, "EUR"],
-  [/(gbp|£|pounds?|quid)/i, "GBP"],
-  [/(usd|dollars?|\$)/i, "USD"],
-  [/(ngn|₦|naira)/i, "NGN"],
-  [/(aed|dirhams?|dhs?)/i, "AED"],
-  [/(zar|rands?|r\d)/i, "ZAR"],
-  [/(kes|shillings?|ksh)/i, "KES"],
-  [/(sgd|s\$)/i, "SGD"],
-  [/(cad|c\$)/i, "CAD"],
-  [/(aud|a\$)/i, "AUD"],
-  [/(inr|₹|rupees?)/i, "INR"],
-  [/(mxn|pesos?)/i, "MXN"],
-  [/(brl|reais?)/i, "BRL"],
-  [/(jpy|¥|yen)/i, "JPY"],
+  [/(\beur\b|€|\beuros?\b)/i, "EUR"],
+  [/(\bgbp\b|£|\bpounds?\b|\bquid\b)/i, "GBP"],
+  [/(\busd\b|\bdollars?\b|\$)/i, "USD"],
+  [/(\bngn\b|₦|\bnaira\b)/i, "NGN"],
+  [/(\baed\b|\bdirhams?\b|\bdhs?\b)/i, "AED"],
+  [/(\bzar\b|\brands?\b|\br\d)/i, "ZAR"],
+  [/(\bkes\b|\bshillings?\b|\bksh\b)/i, "KES"],
+  [/(\bsgd\b|\bs\$)/i, "SGD"],
+  [/(\bcad\b|\bc\$)/i, "CAD"],
+  [/(\baud\b|\ba\$)/i, "AUD"],
+  [/(\binr\b|₹|\brupees?\b)/i, "INR"],
+  [/(\bmxn\b|\bpesos?\b)/i, "MXN"],
+  [/(\bbrl\b|\breais?\b)/i, "BRL"],
+  [/(\bjpy\b|¥|\byen\b)/i, "JPY"],
 ];
 
 function detectCurrency(text: string): Currency | undefined {
@@ -309,7 +309,7 @@ export function extractRequirementWithRules(text: string): ParsedRequirement | n
  * the renter nor the market is ambiguous, the market is better evidence.
  */
 export function statesPeriodExplicitly(text: string): boolean {
-  return /(per|a|\/)\s*(month|year|annum)|monthly|yearly|annually|pcm|p\.?a\.?|\/mo/i.test(
+  return /\b(per|a|\/)\s*(month|year|annum)\b|\bmonthly\b|\byearly\b|\bannually\b|\bpcm\b|\bp\.?a\.?\b|\/mo\b/i.test(
     text,
   );
 }

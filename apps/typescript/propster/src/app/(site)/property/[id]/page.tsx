@@ -17,8 +17,9 @@ import { amenityLabel, canonicalizeAmenities } from "@/domain/amenities";
 import { formatDuration } from "@/domain/format";
 import { summariseDiscrepancy, toAnnual } from "@/domain/discrepancy";
 import { formatMoney, formatMoneyExact } from "@/domain/money";
-import { maskPhone } from "@/domain/phone";
+import { isReservedDemoPhone, maskPhone } from "@/domain/phone";
 import type { PropertyDiscrepancy, TranscriptTurn } from "@/domain/types";
+import { usingRealCalle } from "@/server/env";
 import { ApiError } from "@/server/http";
 import { getPropertyDetail, type PropertyDetailView } from "@/server/readModel";
 
@@ -43,6 +44,16 @@ export default async function PropertyPage({
   }
 
   const { listing, verification, breakdown, call, status } = view;
+
+  // A simulated call has two quite different causes, and saying the wrong one
+  // sends a judge off to check a key that is already set. Seed listings carry
+  // numbers from ranges reserved for fiction, which are never dialled even when
+  // CALL-E is fully configured.
+  const simulatedBecauseDemoNumber =
+    usingRealCalle() &&
+    listing.agentPhone !== undefined &&
+    listing.agentPhone !== null &&
+    isReservedDemoPhone(listing.agentPhone);
   const isRunning = status === "pending" || status === "in_progress";
 
   const fees = verification
@@ -481,8 +492,10 @@ export default async function PropertyPage({
 
               {!call.isLive ? (
                 <p className="mt-4 rounded-lg bg-ink-50 px-3 py-2 text-[11px] leading-relaxed text-ink-500">
-                  This was a simulated call. No telephone number was dialled. Configure
-                  CALLE_API_KEY to place real verification calls.
+                  This was a simulated call. No telephone number was dialled.{" "}
+                  {simulatedBecauseDemoNumber
+                    ? "This listing's contact number is in a range reserved for fiction, so it is never dialled. Enter your own number on the Call my phone page to hear a real CALL-E call."
+                    : "Configure CALLE_API_KEY to place real verification calls."}
                 </p>
               ) : null}
             </Card>

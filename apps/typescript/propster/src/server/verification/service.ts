@@ -871,6 +871,19 @@ function userMessageForCallFailure(
   if (status === "canceled" || haystack.includes("cancel")) {
     return "The verification call was cancelled before it completed.";
   }
+
+  // The provider failed to build the voice agent, so the call was never
+  // placed and nobody was contacted. That is worth saying plainly: it reads as
+  // a failed call otherwise, and it is safe and usually effective to retry.
+  if (
+    haystack.includes("voice agent setup") ||
+    haystack.includes("could not start") ||
+    haystack.includes("botlab") ||
+    haystack.includes("create bot")
+  ) {
+    return "The call service could not set up the agent, so no call was placed and nobody was contacted. Try again.";
+  }
+
   return "The verification call did not complete. This property has not been verified.";
 }
 

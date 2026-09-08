@@ -79,7 +79,7 @@ export function usingRealCalle(): boolean {
  * True when a language model is configured for extraction, from any provider.
  * `src/server/llm.ts` decides which one actually serves the request.
  */
-export function usingClaude(): boolean {
+export function llmConfigured(): boolean {
   if (env.llm.provider === "groq") return env.groq.apiKey.length > 0;
   if (env.llm.provider === "anthropic") return env.anthropic.apiKey.length > 0;
   return env.groq.apiKey.length > 0 || env.anthropic.apiKey.length > 0;

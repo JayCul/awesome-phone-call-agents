@@ -6,7 +6,7 @@ import {
   type CallVerificationResult,
 } from "@/domain/schemas";
 import type { PropertyListing, TranscriptTurn } from "@/domain/types";
-import { usingClaude } from "../env";
+import { llmConfigured } from "../env";
 import { activeModel, activeProvider, completeJson, parseJsonObject } from "../llm";
 import { logger } from "../logger";
 
@@ -66,6 +66,10 @@ const SYSTEM_PROMPT = [
   "- current_rent is a plain number in the listing's own currency, for ONE",
   '  period. Never convert between currencies or between months and years.',
   '  "10 million monthly" is current_rent 10000000, rent_period "monthly".',
+  "- property_available is false ONLY if the contact says the property is gone,",
+  "  let, taken or off the market. If they say they do not know, cannot check,",
+  "  are not the right person, or simply never answer, use null. Not knowing is",
+  "  NOT a no, and a wrong 'no longer available' is the worst error you can make.",
   "- reached_contact is false only if nobody engaged with the questions at all.",
   "",
   "Return ONLY a JSON object matching this schema. No prose, no code fences:",
@@ -104,6 +108,52 @@ function renderListingContext(listing: PropertyListing): string {
     .join("\n");
 }
 
+/**
+ * Phrases in which a contact actually states the property has gone.
+ *
+ * Deliberately about the property, not about the contact's knowledge: "I don't
+ * know" and "I can't check that" are absent, because not knowing is not a no.
+ */
+const SAID_UNAVAILABLE =
+  /\b(no longer available|not available|isn'?t available|it'?s gone|has gone|been (let|taken|rented|sold)|off the market|already (let|taken|rented|sold)|we let it|somebody took it)\b/i;
+
+/**
+ * Refuse a "no longer available" the contact never actually said.
+ *
+ * Marking a property unavailable is the single most consequential claim
+ * Propster makes: it zeroes the availability score, drives the headline status,
+ * and prints "the contact said this property is no longer on the market". On a
+ * real call to a contact who answered "I don't have information about apartment
+ * availability, so I can't verify that for you", the model returned
+ * `property_available: false` — inventing a rejection out of an admission of
+ * ignorance, against an explicit instruction not to guess.
+ *
+ * The prompt already forbids this, and the prompt was not enough. So the claim
+ * is checked against what was actually spoken: a false only survives if some
+ * contact turn really says the property has gone. Otherwise it becomes null,
+ * which scores as unconfirmed. The failure direction matters — an unconfirmed
+ * property is merely unproven, a falsely unavailable one is wrong.
+ */
+export function guardAvailabilityClaim(
+  facts: CallVerificationResult,
+  turns: readonly TranscriptTurn[],
+): CallVerificationResult {
+  if (facts.property_available !== false) return facts;
+
+  const spoken = turns
+    .filter((turn) => turn.speaker === "contact")
+    .map((turn) => turn.text)
+    .join(" ");
+
+  if (SAID_UNAVAILABLE.test(spoken)) return facts;
+
+  logger.warn("transcript.unsupported_unavailable_claim", {
+    provider: activeProvider(),
+    model: activeModel(),
+  });
+  return { ...facts, property_available: null };
+}
+
 async function extractWithModel(
   turns: readonly TranscriptTurn[],
   listing: PropertyListing,
@@ -130,7 +180,7 @@ async function extractWithModel(
     });
     return null;
   }
-  return result.data;
+  return guardAvailabilityClaim(result.data, turns);
 }
 
 /**
@@ -234,7 +284,7 @@ export async function extractFactsFromTranscript(
 ): Promise<TranscriptExtraction | null> {
   if (turns.length === 0) return null;
 
-  if (usingClaude()) {
+  if (llmConfigured()) {
     try {
       const facts = await extractWithModel(turns, listing);
       if (facts) return { facts, source: "model" };

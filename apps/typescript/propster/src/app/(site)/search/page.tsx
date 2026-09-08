@@ -1,6 +1,7 @@
 import { SearchForm } from "@/components/SearchForm";
 import { Card } from "@/components/ui";
-import { usingClaude, usingRealCalle } from "@/server/env";
+import { llmConfigured, usingRealCalle } from "@/server/env";
+import { activeModel, activeProvider } from "@/server/llm";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,15 @@ export default async function SearchPage({
   const params = await searchParams;
   const prefillDemo = params.demo === "1";
   const live = usingRealCalle();
-  const claude = usingClaude();
+  const hasModel = llmConfigured();
+
+  // Name the model that actually serves the request. The provider is a
+  // configuration choice, and a judge reading this panel should see the one in
+  // use rather than whichever vendor was wired up first.
+  const provider = activeProvider();
+  const modelName =
+    provider === "groq" ? "Groq" : provider === "anthropic" ? "Claude" : "Deterministic parser";
+  const modelId = activeModel();
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-14">
@@ -33,13 +42,16 @@ export default async function SearchPage({
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <ConfigNote
           label="Requirement extraction"
-          value={claude ? "Claude" : "Deterministic parser"}
+          value={modelName}
           detail={
-            claude
-              ? "Natural language is parsed by Claude, then validated against a strict schema before use."
+            hasModel
+              ? "Natural language is parsed by " +
+                modelName +
+                (modelId === null ? "" : " (" + modelId + ")") +
+                ", then validated against a strict schema before use."
               : "No model key configured, so the built-in rule parser handles natural language. It reads currency symbols, millions and 'k' notation."
           }
-          tone={claude ? "good" : "neutral"}
+          tone={hasModel ? "good" : "neutral"}
         />
         <ConfigNote
           label="Phone verification"
