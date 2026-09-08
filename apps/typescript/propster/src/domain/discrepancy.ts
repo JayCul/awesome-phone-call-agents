@@ -21,7 +21,8 @@ export function toAnnual(amount: number, period: "monthly" | "yearly"): number {
 const RENT_TOLERANCE = 0.02;
 
 export interface VerificationFacts {
-  available: boolean;
+  /** Undefined when the call never established it. Only `false` is a refusal. */
+  available?: boolean;
   currentRent?: number;
   currency?: Currency;
   rentPeriod?: "monthly" | "yearly";
@@ -53,7 +54,10 @@ export function detectDiscrepancies(
   // Rent is only ever compared within one currency; see domain/money.ts.
   const money = (amount: number) => formatMoney(amount, listing.currency);
 
-  if (!facts.available) {
+  // Only a stated refusal is a discrepancy. The explanation below quotes the
+  // contact, so it must not be raised for a call that simply never got an
+  // answer: that is a gap in the evidence, not a contradiction of the listing.
+  if (facts.available === false) {
     discrepancies.push({
       field: "availability",
       listedValue: "Advertised as available",

@@ -64,7 +64,7 @@ export function scoreVerification(
       status: "pass",
       detail: "Property confirmed available",
     });
-  } else {
+  } else if (verification.available === false) {
     push({
       key: "availability",
       label: "Availability",
@@ -73,6 +73,20 @@ export function scoreVerification(
       earned: 0,
       status: "fail",
       detail: "Property is no longer available",
+    });
+  } else {
+    // Nobody said the property was gone; nobody confirmed it was there either.
+    // Scored like every other fact the call failed to establish, because
+    // "unconfirmed" and "confirmed gone" are different claims and only one of
+    // them is a reason to strike the property off.
+    push({
+      key: "availability",
+      label: "Availability",
+      weight: SCORE_WEIGHTS.availability,
+      ratio: 0.3,
+      earned: Math.round(SCORE_WEIGHTS.availability * 0.3 * 10) / 10,
+      status: "unknown",
+      detail: "Availability was not confirmed on the call",
     });
   }
 

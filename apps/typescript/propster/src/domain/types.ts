@@ -88,7 +88,11 @@ export interface PropertyDiscrepancy {
 
 /** Structured facts recovered from the verification phone call. */
 export interface PropertyVerification {
-  available: boolean;
+  /**
+   * Undefined when the call never established this, which is a different claim
+   * from `false`. Only `false` means a contact said the property is gone.
+   */
+  available?: boolean;
   currentRent?: number;
   currency?: Currency;
   rentPeriod?: RentPeriod;

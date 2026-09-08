@@ -511,7 +511,10 @@ export async function applyCallResult(
   const full: PropertyVerification = { ...verifiedFacts, discrepancies };
   const breakdown = scoreVerification(listing, full, requirement);
 
-  const nextStatus: VerificationStatus = !full.available
+  // Only an actual "it is gone" marks a property unavailable. An availability
+  // the call never established is unproven, and the score carries that gap as a
+  // deduction rather than the headline calling the property dead.
+  const nextStatus: VerificationStatus = full.available === false
     ? "unavailable"
     : hasHighSeverity(discrepancies)
       ? "disputed"
@@ -611,7 +614,10 @@ export function toDomainVerification(
     value === null || value === undefined || value.trim() === "" ? undefined : value.trim();
 
   return {
-    available: facts.property_available === true,
+    // `bool` and not `=== true`: an availability the call never established is
+    // undefined, not false. Collapsing it here would make "we could not confirm"
+    // indistinguishable from "the contact said it is gone".
+    available: bool(facts.property_available),
     currentRent: num(facts.current_rent),
     rentPeriod: facts.rent_period === null ? undefined : facts.rent_period,
     bedrooms: num(facts.bedrooms),
